@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Functional Spec — atovio App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #f5f6f9;
+  --surface: #ffffff;
+  --surface2: #f0f2f7;
+  --border: #e2e6f0;
+  --border2: #cdd3e3;
+  --accent: #2563eb;
+  --accent2: #7c3aed;
+  --accent3: #059669;
+  --accent4: #d97706;
+  --accent5: #dc2626;
+  --text: #111827;
+  --text2: #374151;
+  --text3: #9ca3af;
+  --code-bg: #f8f9fc;
+  --tag-blue: rgba(37,99,235,0.08);
+  --tag-green: rgba(5,150,105,0.08);
+  --tag-purple: rgba(124,58,237,0.08);
+  --tag-yellow: rgba(217,119,6,0.1);
+  --tag-red: rgba(220,38,38,0.08);
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --radius: 10px;
+  --sidebar: 260px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 16px;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: var(--sidebar);
+  height: 100vh;
+  background: #ffffff;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.sidebar-logo {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-logo .doc-type {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.sidebar-logo h1 {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.3;
+}
+.sidebar-logo .version {
+  display: inline-block;
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  background: var(--surface2);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.sidebar-nav { padding: 12px 0; flex: 1; }
+
+.nav-group { margin-bottom: 4px; }
+
+.nav-group-label {
+  padding: 10px 20px 4px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--text3);
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 20px;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.15s;
+  border-left: 2px solid transparent;
+  line-height: 1.3;
+}
+.nav-link:hover { color: var(--text); background: var(--surface2); }
+.nav-link.active { color: var(--accent); border-left-color: var(--accent); background: rgba(37,99,235,0.06); }
+.nav-link .dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--border2);
+  flex-shrink: 0;
+}
+.nav-link.active .dot { background: var(--accent); }
+
+.sidebar-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+}
+.sidebar-footer .meta { font-size: 11px; color: var(--text3); }
+.sidebar-footer .meta span { color: var(--text2); }
+
+/* ── MAIN ── */
+.main {
+  margin-left: var(--sidebar);
+  min-height: 100vh;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  background: rgba(245,246,249,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 50;
+}
+.topbar-breadcrumb {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+.topbar-breadcrumb span { color: var(--text2); }
+.topbar-tags { display: flex; gap: 6px; }
+.tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+.tag-blue { background: var(--tag-blue); color: var(--accent); border: 1px solid rgba(79,142,247,0.25); }
+.tag-green { background: var(--tag-green); color: var(--accent3); border: 1px solid rgba(45,214,160,0.25); }
+.tag-purple { background: var(--tag-purple); color: var(--accent2); border: 1px solid rgba(124,92,252,0.25); }
+.tag-yellow { background: var(--tag-yellow); color: var(--accent4); border: 1px solid rgba(247,178,79,0.25); }
+.tag-red { background: var(--tag-red); color: var(--accent5); border: 1px solid rgba(247,95,126,0.25); }
+
+.content { padding: 56px 48px;  }
+
+/* ── SECTION HERO ── */
+.section-hero {
+  margin-bottom: 48px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+}
+.section-hero .screen-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-hero .screen-label::before {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--accent);
+}
+.section-hero h2 {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 40px;
+  color: var(--text);
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+.section-hero p {
+  color: var(--text2);
+  font-size: 17px;
+  max-width: 620px;
+  line-height: 1.65;
+}
+
+/* ── WIDGET CARD ── */
+.widget-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.widget-card:hover { border-color: var(--border2); }
+
+.widget-header {
+  padding: 16px 22px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.widget-num {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 3px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.widget-title-wrap {}
+.widget-title {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--text);
+  line-height: 1.3;
+}
+.widget-subtitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+.widget-body { padding: 18px 22px; }
+
+/* ── SUB SECTIONS ── */
+.sub-section { margin-bottom: 18px; }
+.sub-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--accent3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+/* ── CODE BLOCKS ── */
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: #1e293b;
+  line-height: 1.65;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+pre .kw { color: var(--accent); }
+pre .fn { color: var(--accent3); }
+pre .cm { color: var(--text3); }
+pre .str { color: var(--accent4); }
+pre .num { color: var(--accent2); }
+pre .op { color: var(--accent5); }
+
+code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent3);
+  background: rgba(45,214,160,0.08);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* ── INLINE NOTE ── */
+.note {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-left: 3px solid var(--accent4);
+  border-radius: 0 6px 6px 0;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #92400e;
+  margin: 10px 0;
+  line-height: 1.6;
+}
+.note strong { color: var(--accent4); }
+
+.info-note {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #1e40af;
+  margin: 10px 0;
+}
+
+.warn-note {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-left: 3px solid var(--accent5);
+  border-radius: 0 6px 6px 0;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #9f1239;
+  margin: 10px 0;
+}
+
+/* ── TABLES ── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 10px 0;
+}
+th {
+  background: var(--surface2);
+  color: var(--text2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 9px 14px;
+  text-align: left;
+  border: 1px solid var(--border);
+  font-weight: 600;
+}
+td {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  color: var(--text2);
+  vertical-align: top;
+  line-height: 1.55;
+}
+tr:nth-child(even) td { background: #f8f9fc; }
+td strong { color: var(--text); }
+td code { font-size: 11px; }
+
+/* ── STATE CARDS ── */
+.state-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 12px 0;
+}
+.state-card {
+  background: #f8f9fc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.state-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.state-name { font-family: var(--font-head); font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 6px; }
+.state-body { font-size: 12.5px; color: var(--text2); line-height: 1.55; }
+.state-a .state-label { color: var(--accent); }
+.state-b .state-label { color: var(--accent4); }
+.state-c .state-label { color: var(--accent3); }
+.state-d .state-label { color: var(--text3); }
+
+/* ── CHIP ROW ── */
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.chip {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+}
+
+/* ── INSIGHT CARDS ── */
+.insight-list { display: flex; flex-direction: column; gap: 10px; }
+.insight-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #f8f9fc;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.insight-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.insight-content .insight-title { font-weight: 600; font-size: 13px; color: var(--text); margin-bottom: 3px; }
+.insight-content .insight-desc { font-size: 12.5px; color: var(--text2); line-height: 1.5; }
+
+/* ── ACHIEVEMENT CARDS ── */
+.achievement-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0; }
+.achievement-card {
+  background: #f8f9fc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.achievement-icon { font-size: 22px; margin-top: 2px; flex-shrink: 0; }
+.achievement-name { font-weight: 700; font-size: 13px; color: var(--text); margin-bottom: 4px; }
+.achievement-trigger { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+/* ── SECTION DIVIDER ── */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 56px 0 40px;
+}
+.section-divider .div-line { flex: 1; height: 1px; background: var(--border); }
+.section-divider .div-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* ── STEP FLOW ── */
+.step-list { display: flex; flex-direction: column; gap: 0; }
+.step-item {
+  display: flex;
+  gap: 16px;
+  position: relative;
+}
+.step-item::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 32px;
+  bottom: -8px;
+  width: 1px;
+  background: var(--border);
+}
+.step-item:last-child::before { display: none; }
+.step-num {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.step-content { flex: 1; padding-bottom: 20px; }
+.step-title { font-weight: 600; font-size: 13.5px; color: var(--text); margin-bottom: 4px; }
+.step-body { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+/* ── LOOKUP TABLE ── */
+.lookup-table-wrap {
+  background: #f8f9fc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+.lookup-table-wrap table { margin: 0; }
+.lookup-table-wrap th { background: #eef2ff; }
+.lookup-table-wrap td { border-color: var(--border); }
+.volt-high { color: var(--accent3) !important; font-weight: 600; }
+.volt-mid { color: var(--accent4) !important; font-weight: 600; }
+.volt-low { color: var(--accent5) !important; font-weight: 600; }
+
+/* ── SCHEMA TABLE ── */
+.schema-block {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin: 8px 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.schema-block .s-table { color: var(--accent); }
+.schema-block .s-field { color: #374151; }
+.schema-block .s-type { color: var(--accent2); }
+.schema-block .s-comment { color: var(--text3); }
+
+/* ── TEAM RESPONSIBILITY ── */
+.team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 10px 0; }
+.team-card {
+  background: #f8f9fc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+.team-name {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.team-must .team-name { color: var(--accent); }
+.team-should .team-name { color: var(--accent3); }
+.team-opt .team-name { color: var(--text3); }
+.team-item {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+.team-item::before {
+  content: '→';
+  color: var(--text3);
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin-top: 1px;
+}
+
+/* ── PRINCIPLE BOX ── */
+.principle-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin: 16px 0;
+  font-size: 13.5px;
+  color: var(--text2);
+  line-height: 1.7;
+}
+.principle-box strong { color: #065f46; }
+
+/* ── BLE DATA MODEL ── */
+.ble-model {
+  background: var(--code-bg);
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 16px 18px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 10px 0;
+}
+
+/* ── PAGE SECTION ANCHORS ── */
+.page-section { padding-top: 20px; }
+
+/* ── SCROLLSPY ── */
+.nav-link { cursor: pointer; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  :root { --sidebar: 220px; }
+  .content { padding: 32px 28px; }
+  .team-grid { grid-template-columns: 1fr; }
+  .state-grid { grid-template-columns: 1fr; }
+  .achievement-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 680px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .content { padding: 24px 18px; }
+}
+
+/* ── MISC ── */
+p { color: var(--text2); line-height: 1.65; margin-bottom: 8px; }
+h3 { font-family: var(--font-head); font-weight: 700; font-size: 16px; color: var(--text); margin: 20px 0 10px; }
+ul { padding-left: 18px; color: var(--text2); }
+ul li { margin-bottom: 4px; font-size: 13.5px; line-height: 1.55; }
+ul li::marker { color: var(--text3); }
+strong { color: var(--text); font-weight: 600; }
+
+.pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.pill {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="doc-type">Functional Spec · FSR</div>
+    <h1>atovio App</h1>
+    <span class="version">v1.0 · April 2025</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-group-label">Screen 1 — My Device</div>
+      <a class="nav-link active" href="#s1-overview"><span class="dot"></span>Overview</a>
+      <a class="nav-link" href="#s1-w1"><span class="dot"></span>W1 · Connection Status</a>
+      <a class="nav-link" href="#s1-w2"><span class="dot"></span>W2 · Protection Status</a>
+      <a class="nav-link" href="#s1-w3"><span class="dot"></span>W3 · Air Quality</a>
+      <a class="nav-link" href="#s1-w4"><span class="dot"></span>W4 · Protection %</a>
+      <a class="nav-link" href="#s1-w5"><span class="dot"></span>W5 · Power Toggle</a>
+      <a class="nav-link" href="#s1-w6"><span class="dot"></span>W6 · Smart Mode</a>
+      <a class="nav-link" href="#s1-w7"><span class="dot"></span>W7 · Battery</a>
+      <a class="nav-link" href="#s1-w8"><span class="dot"></span>W8 · Stats Preview</a>
+      <a class="nav-link" href="#s1-w9"><span class="dot"></span>W9 · Daily Chart</a>
+      <a class="nav-link" href="#s1-w10"><span class="dot"></span>W10 · Device Health</a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Battery Estimation</div>
+      <a class="nav-link" href="#bat-arch"><span class="dot"></span>Architecture</a>
+      <a class="nav-link" href="#bat-states"><span class="dot"></span>Battery States</a>
+      <a class="nav-link" href="#bat-calc"><span class="dot"></span>Calculation Logic</a>
+      <a class="nav-link" href="#bat-edge"><span class="dot"></span>Edge Cases</a>
+      <a class="nav-link" href="#bat-reqs"><span class="dot"></span>Requirements</a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Screen 2 — Stats</div>
+      <a class="nav-link" href="#s2-overview"><span class="dot"></span>Overview</a>
+      <a class="nav-link" href="#s2-w1"><span class="dot"></span>W1 · Protection Score</a>
+      <a class="nav-link" href="#s2-w2"><span class="dot"></span>W2 · Today's Impact</a>
+      <a class="nav-link" href="#s2-w3"><span class="dot"></span>W3 · Daily Bar Chart</a>
+      <a class="nav-link" href="#s2-w4"><span class="dot"></span>W4 · Totals</a>
+      <a class="nav-link" href="#s2-w5"><span class="dot"></span>W5 · Turbo Usage</a>
+      <a class="nav-link" href="#s2-w6"><span class="dot"></span>W6 · Mode Donut</a>
+      <a class="nav-link" href="#s2-w7"><span class="dot"></span>W7 · Insights</a>
+      <a class="nav-link" href="#s2-w8"><span class="dot"></span>W8 · Achievements</a>
+      <a class="nav-link" href="#s2-w9"><span class="dot"></span>W9 · Weekly Banner</a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Data Layer</div>
+      <a class="nav-link" href="#ble-model"><span class="dot"></span>BLE Data Model</a>
+      <a class="nav-link" href="#db-schema"><span class="dot"></span>DB Schema</a>
+      <a class="nav-link" href="#team-actions"><span class="dot"></span>Team Actions</a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="meta">Status: <span>Draft</span></div>
+    <div class="meta">Audience: <span>Eng · Design</span></div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-breadcrumb">FSR / <span>atovio App</span></div>
+    <div class="topbar-tags">
+      <span class="tag tag-blue">BLE</span>
+      <span class="tag tag-green">AQ API</span>
+      <span class="tag tag-purple">Mobile App</span>
+      <span class="tag tag-yellow">Backend</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ════════════════════════════════════════════
+         SCREEN 1
+    ═══════════════════════════════════════════════ -->
+    <section class="page-section" id="s1-overview">
+      <div class="section-hero">
+        <div class="screen-label">Screen 1</div>
+        <h2>My Device</h2>
+        <p>The primary home screen. Displays real-time device status, air quality context, protection metrics, mode controls, battery, and a stats preview. All live data is sourced from BLE events and an external AQ API.</p>
+      </div>
+
+      <div class="info-note">
+        <strong>BLE Raw Model:</strong> Every time mode changes, a new BLE event arrives with <code>timestamp</code>, <code>mode</code> ("normal" | "turbo" | "off"), and <code>duration_seconds</code>. Sessions are tracked server-side.
+      </div>
+    </section>
+
+    <!-- W1 -->
+    <div class="widget-card page-section" id="s1-w1">
+      <div class="widget-header">
+        <div class="widget-num">W1</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Connection Status Badge</div>
+          <div class="widget-subtitle">e.g. "Connected"</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <table>
+          <tr><th>Condition</th><th>Display</th><th>Style</th></tr>
+          <tr><td>Last BLE event &lt; 30 seconds ago</td><td><strong>Connected</strong></td><td><span class="tag tag-green">green dot</span></td></tr>
+          <!-- <tr><td>Last BLE event 30s–5 min ago</td><td><strong>Connecting…</strong></td><td><span class="tag tag-yellow">yellow dot</span></td></tr> -->
+          <tr><td>No BLE event &gt; 5 min</td><td><strong>Disconnected</strong></td><td><span class="tag tag-red">red dot</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- W2 -->
+    <div class="widget-card page-section" id="s1-w2">
+      <div class="widget-header">
+        <div class="widget-num">W2</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Protection Status</div>
+          <div class="widget-subtitle">e.g. "You're Protected"</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <table>
+          <tr><th>Condition</th><th>Status Text</th><th>Color</th></tr>
+          <tr><td><code>mode == "turbo"</code> OR <code>mode == "normal"</code></td><td><strong>You're Protected</strong></td><td><span class="tag tag-green">green</span></td></tr>
+          <tr><td><code>mode == "off"</code> AND last_off_duration &gt; 15 min</td><td><strong>Protection Off</strong></td><td><span class="tag tag-red">red</span></td></tr>
+          <tr><td>Mode transitions from off → on</td><td><strong>Protection Started</strong></td><td><span class="tag tag-blue">blue</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- W3 -->
+    <div class="widget-card page-section" id="s1-w3">
+      <div class="widget-header">
+        <div class="widget-num">W3</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Air Quality Display</div>
+          <div class="widget-subtitle">AQI · PM2.5 · Level label · Active badge</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="info-note">Data sourced from external AQ API (e.g. OpenAQ, IQAir). <strong>The BLE device does not send AQ data.</strong> AQI is paired by user GPS location.</div>
+        <div class="sub-label" style="margin-top:14px;">AQI Level Labels</div>
+        <table>
+          <tr><th>AQI Range</th><th>Label</th><th>Color</th></tr>
+          <tr><td>0–50</td><td><strong>Good</strong></td><td><span class="tag tag-green">green</span></td></tr>
+          <tr><td>51–100</td><td><strong>Moderate</strong></td><td><span class="tag tag-yellow">yellow</span></td></tr>
+          <tr><td>101–150</td><td><strong>High</strong></td><td><span class="tag" style="background:rgba(247,127,79,0.15);color:#f77f4f;border:1px solid rgba(247,127,79,0.3);">orange</span></td></tr>
+          <tr><td>151–200</td><td><strong>Very High</strong></td><td><span class="tag tag-red">red</span></td></tr>
+          <tr><td>200+</td><td><strong>Hazardous</strong></td><td><span class="tag tag-purple">purple</span></td></tr>
+        </table>
+        <div class="note" style="margin-top:12px;"><strong>Active badge:</strong> Shown if <code>mode != "off"</code></div>
+      </div>
+    </div>
+
+    <!-- W4 -->
+    <div class="widget-card page-section" id="s1-w4">
+      <div class="widget-header">
+        <div class="widget-num">W4</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Protection % Bar</div>
+          <div class="widget-subtitle">e.g. "82% protected"</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="sub-label">Primary calculation</div>
+        <pre><span class="cm">// For the current day:</span>
+total_device_on_seconds = <span class="fn">SUM</span>(durations <span class="kw">where</span> mode <span class="kw">IN</span> (<span class="str">"normal"</span>, <span class="str">"turbo"</span>))
+total_awake_seconds     = user's wake period (<span class="cm">e.g. 6AM–10PM = 57,600s</span>)
+protection_pct          = (total_device_on_seconds / total_awake_seconds) × <span class="num">100</span></pre>
+        <div class="sub-label" style="margin-top:12px;">Alternative (AQI-weighted)</div>
+        <pre>high_aqi_windows = times <span class="kw">when</span> AQI &gt; <span class="num">100</span> (<span class="cm">from AQ API, polled hourly</span>)
+protected_windows = <span class="fn">overlap</span>(high_aqi_windows, device_on_sessions)
+protection_pct    = (protected_windows / total_high_aqi_time) × <span class="num">100</span></pre>
+      </div>
+    </div>
+
+    <!-- W5 -->
+    <div class="widget-card page-section" id="s1-w5">
+      <div class="widget-header">
+        <div class="widget-num">W5</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Power Toggle + Mode Selector</div>
+          <div class="widget-subtitle">Normal / Turbo / Smart chips</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="sub-label">Toggle state</div>
+        <table>
+          <tr><th>State</th><th>Condition</th></tr>
+          <tr><td><strong>ON</strong></td><td>Last BLE mode IN ("normal", "turbo")</td></tr>
+          <tr><td><strong>OFF</strong></td><td>Last BLE mode == "off"</td></tr>
+        </table>
+        <div class="sub-label" style="margin-top:12px;">Toggle actions → BLE write commands</div>
+        <pre>User taps OFF → <span class="fn">send_ble</span>(<span class="str">"set_mode"</span>, <span class="str">"off"</span>)
+User taps ON  → <span class="fn">send_ble</span>(<span class="str">"set_mode"</span>, <span class="str">"normal"</span>)  <span class="cm">// default</span></pre>
+        <div class="sub-label" style="margin-top:12px;">Active chip highlight</div>
+        <table>
+          <tr><th>Chip</th><th>Active when</th></tr>
+          <tr><td><strong>Normal</strong></td><td><code>mode == "normal"</code></td></tr>
+          <tr><td><strong>Turbo</strong></td><td><code>mode == "turbo"</code></td></tr>
+          <tr><td><strong>Smart</strong></td><td>App-controlled auto-switching (see W6)</td></tr>
+        </table>
+        <div class="info-note" style="margin-top:10px;">Chip tap → sends BLE write command to device.</div>
+      </div>
+    </div>
+
+    <!-- W6 -->
+    <div class="widget-card page-section" id="s1-w6">
+      <div class="widget-header">
+        <div class="widget-num">W6</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Smart Mode Toggle</div>
+          <div class="widget-subtitle">"Auto-adjusts based on air quality"</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="note"><strong>Smart Mode is an app-side automation layer</strong>, not a native device mode. Stored in user profile/DB, not on device.</div>
+        <div class="sub-label" style="margin-top:12px;">Auto-switch logic (runs every 15 min)</div>
+        <pre><span class="kw">IF</span> smart_mode_enabled:
+  <span class="cm">// Check AQI from AQ API every 15 min</span>
+  AQI &lt; <span class="num">100</span>  → <span class="fn">send_ble</span>(<span class="str">"set_mode"</span>, <span class="str">"normal"</span>)
+  AQI &gt;= <span class="num">100</span> → <span class="fn">send_ble</span>(<span class="str">"set_mode"</span>, <span class="str">"turbo"</span>)
+  AQI &lt; <span class="num">50</span> AND user_preference == <span class="str">"save_battery"</span> → <span class="fn">send_ble</span>(<span class="str">"set_mode"</span>, <span class="str">"off"</span>)</pre>
+        <div class="info-note">Label "Auto-adjusts based on air quality" is always a static string.</div>
+      </div>
+    </div>
+
+    <!-- W7 -->
+    <div class="widget-card page-section" id="s1-w7">
+      <div class="widget-header">
+        <div class="widget-num">W7</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Battery Widget</div>
+          <div class="widget-subtitle">64% · ≈5h 20m remaining · Switch to Normal → +2h</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="note"><strong>Battery estimation is handled entirely by the app</strong> — not firmware. See the Battery Estimation section below for full logic, states, calculation steps, and edge cases.</div>
+        <div class="sub-label" style="margin-top:12px;">Display elements</div>
+        <ul>
+          <li><strong>Battery %</strong> — estimated from firmware voltage (when in stable/discharging state)</li>
+          <li><strong>Remaining time</strong> — estimated from current drain rate and remaining capacity</li>
+          <li><strong>Mode tip</strong> — "Switch to Normal → +2h" (calculated from mode drain rate delta)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- W8 -->
+    <div class="widget-card page-section" id="s1-w8">
+      <div class="widget-header">
+        <div class="widget-num">W8</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Stats Preview Card</div>
+          <div class="widget-subtitle">38% avoided · 2h 45m protected · 82 week score · View Stats →</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="sub-label">avoided_today_pct</div>
+        <pre>= % of time device was ON during high-AQI periods today
+<span class="cm">// Same as Protection % but scoped to pollutant-heavy windows</span></pre>
+        <div class="sub-label">protected_today</div>
+        <pre>= <span class="fn">SUM</span>(BLE session durations <span class="kw">where</span> mode != <span class="str">"off"</span>, today)
+→ formatted as <span class="str">"Xh Ym"</span></pre>
+        <div class="sub-label">week_score (0–100) — composite, calculated server-side</div>
+        <pre>score = <span class="fn">weighted_avg</span>(
+  protection_coverage_pct × <span class="num">0.4</span>,  <span class="cm">// % of day protected</span>
+  turbo_use_during_high_aqi × <span class="num">0.3</span>, <span class="cm">// smart usage</span>
+  consistency_days_this_week × <span class="num">0.3</span>  <span class="cm">// daily streak factor</span>
+)  → scale to <span class="num">0</span>–<span class="num">100</span></pre>
+      </div>
+    </div>
+
+    <!-- W9 -->
+    <div class="widget-card page-section" id="s1-w9">
+      <div class="widget-header">
+        <div class="widget-num">W9</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Daily Protection Bar Chart</div>
+          <div class="widget-subtitle">Protection hours: W, T, F, S, S</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="sub-label">Per-day logic</div>
+        <pre>day_protected_hours = <span class="fn">SUM</span>(session durations <span class="kw">where</span> mode != <span class="str">"off"</span>) / <span class="num">3600</span>
+max_hours           = <span class="fn">MAX</span>(all days this week)
+bar_height_pct      = (day_hours / max_hours) × <span class="num">100</span></pre>
+        <table style="margin-top:10px;">
+          <tr><th>Bar type</th><th>Style</th></tr>
+          <tr><td>Today</td><td>Darker blue</td></tr>
+          <tr><td>Past days</td><td>Light blue</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- W10 -->
+    <div class="widget-card page-section" id="s1-w10">
+      <div class="widget-header">
+        <div class="widget-num">W10</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Device Health</div>
+          <div class="widget-subtitle">Health · Next Cleaning · Firmware version</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <table>
+          <tr><th>Sub-item</th><th>Value</th><th>Logic</th></tr>
+          <tr><td><strong>Device Health</strong></td><td>Good / Fair / Replace</td><td><em>Working on this</em></td></tr>
+          <tr><td><strong>Next Cleaning</strong></td><td>e.g. "14 days"</td><td>Based on usage hours since last cleaning event logged by user. Prompt at every 50h of operation.</td></tr>
+          <tr><td><strong>Firmware</strong></td><td>"Up to date"</td><td>Server-side version check against latest firmware release.</td></tr>
+        </table>
+      </div>
+    </div>
+
+
+    <!-- ════════════════════════════════════════════
+         BATTERY ESTIMATION
+    ═══════════════════════════════════════════════ -->
+    <div class="section-divider">
+      <div class="div-line"></div>
+      <div class="div-label">Battery Estimation Spec</div>
+      <div class="div-line"></div>
+    </div>
+
+    <section class="page-section" id="bat-arch">
+      <div class="section-hero">
+        <div class="screen-label" style="color:var(--accent4);">Part of Screen 1</div>
+        <h2>Battery Estimation</h2>
+        <p>Due to device IC memory and timing constraints, battery % is not calculated in firmware. The app handles all estimation using the manufacturer's 0.5C discharge curve. Firmware sends raw voltage only.</p>
+      </div>
+
+      <div class="sub-label">Data sent by firmware</div>
+      <div class="note">Sent on mode change, or every 5 min. If extremely low power: every 10–15 min.</div>
+      <table>
+        <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+        <tr><td><code>battery_voltage_mv</code></td><td>Int (mV)</td><td><span class="tag tag-red">Must</span></td><td>Raw battery voltage in millivolts. e.g. <code>3810</code> = 3.810V</td></tr>
+        <tr><td><code>charging_status</code></td><td>Enum / Bool</td><td><span class="tag tag-red">Must</span></td><td>"charging" / "not_charging" (or true/false)</td></tr>
+        <tr><td><code>sample_timestamp</code></td><td>DateTime</td><td><span class="tag tag-yellow">Recommended</span></td><td>Determines freshness, supports filtering</td></tr>
+        <tr><td><code>measurement_valid</code></td><td>Bool</td><td><span class="tag tag-green">Optional</span></td><td>Firmware flag indicating reading validity</td></tr>
+      </table>
+
+      <div class="sub-label" style="margin-top:20px;">Architecture decision</div>
+      <table>
+        <tr><th>Layer</th><th>Responsibility</th></tr>
+        <tr><td><strong>Firmware</strong></td><td>Send raw battery voltage + charging status only</td></tr>
+        <tr><td><strong>App / Frontend</strong></td><td>All battery state logic, filtering, interpolation, user display</td></tr>
+        <tr><td><strong>Backend</strong></td><td>Optional — store voltage history, support analytics and tuning</td></tr>
+      </table>
+      <div class="info-note">Backend is <strong>not required</strong> for live battery display. App works standalone via BLE.</div>
+    </section>
+
+    <!-- Battery States -->
+    <section class="page-section" id="bat-states">
+      <h3>Battery State Model</h3>
+      <p>The app must not always force a battery percentage. Battery is modelled as one of four states:</p>
+
+      <div class="state-grid">
+        <div class="state-card state-a">
+          <div class="state-label">State A</div>
+          <div class="state-name">⚡ Charging</div>
+          <div class="state-body"><strong>Condition:</strong> <code>charging_status = charging</code><br/><br/><strong>UI:</strong> Show "Charging". Do not calculate % from live voltage. Optionally show last stable % captured before charging.</div>
+        </div>
+        <div class="state-card state-b">
+          <div class="state-label">State B — Settling_after_Charging</div>
+          <div class="state-name">⏱ Settling After Charging</div>
+          <div class="state-body"><strong>Condition:</strong> Transition from charging → not_charging<br/><br/><strong>UI:</strong> Show last stable % or "Battery updating". Do not use fresh voltage. Settling window: <strong>5 minutes</strong> (tunable).</div>
+        </div>
+        <div class="state-card state-c">
+          <div class="state-label">State C — Stable_after_Charging</div>
+          <div class="state-name">✅ Stable / Discharging</div>
+          <div class="state-body"><strong>Condition:</strong> not_charging + settling complete + enough valid samples<br/><br/><strong>UI:</strong> Calculate and display user-facing battery %.</div>
+        </div>
+        <div class="state-card state-d">
+          <div class="state-label">State D — Unknown</div>
+          <div class="state-name">❓ Unknown</div>
+          <div class="state-body"><strong>Condition:</strong> No valid reading / too few samples / stale data / invalid voltage / just connected<br/><br/><strong>UI:</strong> Show "Battery unavailable" or last known stable value.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Calculation Logic -->
+    <section class="page-section" id="bat-calc">
+      <h3>Calculation Logic — 8 Steps</h3>
+
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Collect voltage samples</div>
+            <div class="step-body">App receives raw <code>battery_voltage_mv</code> values from firmware over BLE.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Validate samples</div>
+            <div class="step-body">Ignore: missing, corrupt, physically impossible, or firmware-flagged invalid readings.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Filter voltage</div>
+            <div class="step-body">Average the last <strong>5–10 valid samples</strong>. This filtered value is the input to estimation. Optionally: store at 2, 2, 1 min → average → show at 5th min. Else send raw.</div>
+            <pre>filtered_voltage = <span class="fn">average</span>(last_5_to_10_valid_samples)</pre>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">Only estimate during stable/discharging state</div>
+            <div class="step-body">All three conditions must be true: <strong>not charging</strong> + <strong>settling complete</strong> + <strong>enough valid samples</strong>.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <div class="step-title">Convert voltage → discharge % via lookup table</div>
+            <div class="step-body">Use the manufacturer's 0.5C discharge curve. Find two nearest voltage points and linearly interpolate.</div>
+            <div class="sub-label" style="margin-top:10px;">Reference Curve (0.5C)</div>
+            <div class="lookup-table-wrap">
+              <table>
+                <tr><th>Voltage (V)</th><th>Battery %</th><th>Voltage (V)</th><th>Battery %</th></tr>
+                <tr><td class="volt-high"><strong>4.16</strong></td><td>100%</td><td class="volt-mid"><strong>3.80</strong></td><td>38%</td></tr>
+                <tr><td class="volt-high"><strong>4.10</strong></td><td>95%</td><td class="volt-mid"><strong>3.76</strong></td><td>30%</td></tr>
+                <tr><td class="volt-high"><strong>4.04</strong></td><td>85%</td><td class="volt-low"><strong>3.72</strong></td><td>22%</td></tr>
+                <tr><td class="volt-high"><strong>3.98</strong></td><td>75%</td><td class="volt-low"><strong>3.70</strong></td><td>18%</td></tr>
+                <tr><td class="volt-mid"><strong>3.92</strong></td><td>65%</td><td class="volt-low"><strong>3.68</strong></td><td>14%</td></tr>
+                <tr><td class="volt-mid"><strong>3.88</strong></td><td>55%</td><td class="volt-low"><strong>3.66</strong></td><td>10%</td></tr>
+                <tr><td class="volt-mid"><strong>3.84</strong></td><td>45%</td><td class="volt-low"><strong>3.64</strong></td><td>0%</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">6</div>
+          <div class="step-content">
+            <div class="step-title">Interpolation formula</div>
+            <pre>Battery % = Plow + ((V - Vlow) / (Vhigh - Vlow)) × (Phigh - Plow)
+
+<span class="cm">// Where Vhigh >= V >= Vlow (two nearest lookup table points)</span></pre>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">7</div>
+          <div class="step-content">
+            <div class="step-title">Clamp output</div>
+            <pre>battery_pct = <span class="fn">clamp</span>(estimated_pct, min=<span class="num">0</span>, max=<span class="num">100</span>)</pre>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">8</div>
+          <div class="step-content">
+            <div class="step-title">Stabilize UI output</div>
+            <div class="step-body">Do not update on tiny fluctuations. Only update when % changes by at least <strong>1–2%</strong>. Avoid sudden upward jumps unless device was charging.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-label" style="margin-top:20px;">Charging-specific rules</div>
+      <table>
+        <tr><th>Rule</th><th>Behaviour</th></tr>
+        <tr><td><strong>While charging</strong></td><td>Never calculate battery % from live voltage</td></tr>
+        <tr><td><strong>Charging begins</strong></td><td>Keep last known stable %, switch UI to charging state</td></tr>
+        <tr><td><strong>Charging ends</strong></td><td>Start settling timer; do not estimate until settled</td></tr>
+        <tr><td><strong>After settling</strong></td><td>Resume normal filtering and estimation</td></tr>
+      </table>
+
+      <div class="sub-label" style="margin-top:20px;">Initial parameters</div>
+      <table>
+        <tr><th>Parameter</th><th>Value</th></tr>
+        <tr><td>Reference curve</td><td>0.5C</td></tr>
+        <tr><td>Filtering window</td><td>Last 5–10 valid samples</td></tr>
+        <tr><td>Post-charge settling</td><td>5 minutes</td></tr>
+        <tr><td>Battery % output range</td><td>0–100</td></tr>
+        <tr><td>Update threshold</td><td>1–2% minimum change before UI update</td></tr>
+      </table>
+    </section>
+
+    <!-- Edge Cases -->
+    <section class="page-section" id="bat-edge">
+      <h3>Edge Cases</h3>
+      <table>
+        <tr><th>Case</th><th>Risk</th><th>Handling</th></tr>
+        <tr><td><strong>Just unplugged from charger</strong></td><td>Voltage remains artificially high</td><td>Enter settling state for 5 min before recalculating</td></tr>
+        <tr><td><strong>Temporary load spike</strong></td><td>Voltage dips briefly → false battery drop</td><td>Use filtered voltage, not single raw readings</td></tr>
+        <tr><td><strong>App just connected</strong></td><td>Not enough samples for reliable estimate</td><td>Do not calculate until minimum valid sample count is reached</td></tr>
+        <tr><td><strong>Invalid voltage</strong></td><td>Corrupt reading → nonsense %</td><td>Reject out-of-range values; do not update UI</td></tr>
+        <tr><td><strong>Missing charging status</strong></td><td>App may incorrectly estimate % while charging</td><td>Charging status is <strong>required</strong> from firmware — not optional</td></tr>
+        <tr><td><strong>Tiny oscillations</strong></td><td>% changes too frequently, looks unstable</td><td>Use filtering + minimum update threshold</td></tr>
+      </table>
+    </section>
+
+    <!-- Battery Requirements -->
+    <section class="page-section" id="bat-reqs">
+      <h3>Requirements by Layer</h3>
+      <div class="team-grid">
+        <div class="team-card team-must">
+          <div class="team-name">Firmware — Must</div>
+          <div class="team-item">Expose <code>battery_voltage_mv</code></div>
+          <div class="team-item">Expose <code>charging_status</code></div>
+          <div class="team-item">Optionally: <code>sample_timestamp</code> or <code>sample_counter</code></div>
+          <div class="team-item">Optionally: <code>measurement_valid</code> flag</div>
+        </div>
+        <div class="team-card team-should">
+          <div class="team-name">App Team — Must</div>
+          <div class="team-item">Maintain recent valid voltage samples</div>
+          <div class="team-item">Apply filtering</div>
+          <div class="team-item">Track charging state transitions</div>
+          <div class="team-item">Track settling timer</div>
+          <div class="team-item">Calculate % only in stable state</div>
+          <div class="team-item">Show correct UI state for all 4 states</div>
+        </div>
+        <div class="team-card team-opt">
+          <div class="team-name">App Team — Must Not</div>
+          <div class="team-item">Estimate % while charging</div>
+          <div class="team-item">Estimate % immediately after charging stops</div>
+          <div class="team-item">Use a linear full-range voltage formula</div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ════════════════════════════════════════════
+         SCREEN 2
+    ═══════════════════════════════════════════════ -->
+    <div class="section-divider">
+      <div class="div-line"></div>
+      <div class="div-label">Screen 2 — Stats &amp; Insights</div>
+      <div class="div-line"></div>
+    </div>
+
+    <section class="page-section" id="s2-overview">
+      <div class="section-hero">
+        <div class="screen-label" style="color:var(--accent2);">Screen 2</div>
+        <h2>Stats &amp; Insights</h2>
+        <p>Weekly analytics dashboard. All metrics are computed server-side by joining BLE session data with AQ API data and user behaviour patterns. The BLE device tells you when and how hard it ran — the app constructs all meaning.</p>
+      </div>
+    </section>
+
+    <!-- S2 W1 -->
+    <div class="widget-card page-section" id="s2-w1">
+      <div class="widget-header">
+        <div class="widget-num">W1</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">This Week: Protection Score</div>
+          <div class="widget-subtitle">e.g. 82 · +12 vs last week · Pie chart fill</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <pre>weekly_score = <span class="fn">weighted_avg</span>(
+  coverage_score:    (protected_hours / total_awake_hours) × <span class="num">40</span>,
+  smart_usage_score: (turbo_during_high_aqi / total_turbo_hours) × <span class="num">30</span>,
+  streak_score:      (days_worn_this_week / <span class="num">7</span>) × <span class="num">30</span>
+)  <span class="cm">// Output: 0–100</span>
+
+delta_vs_last_week = this_week_score - last_week_score
+<span class="cm">// Green if positive, red if negative</span>
+pie_fill = score / <span class="num">100</span></pre>
+      </div>
+    </div>
+
+    <!-- S2 W2 -->
+    <div class="widget-card page-section" id="s2-w2">
+      <div class="widget-header">
+        <div class="widget-num">W2</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Today's Impact</div>
+          <div class="widget-subtitle">38% pollution avoided · 2h 45m protected · Exposure chart</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="sub-label">pollution_avoided_pct</div>
+        <pre>= (time_device_ON_during_high_AQI / total_high_AQI_time_today) × <span class="num">100</span></pre>
+        <div class="sub-label">protected_today_minutes</div>
+        <pre>= <span class="fn">SUM</span>(BLE sessions <span class="kw">where</span> mode != <span class="str">"off"</span>, today) / <span class="num">60</span>
+→ formatted as <span class="str">"Xh Ym"</span></pre>
+        <div class="sub-label">Exposure Breakdown Chart</div>
+        <table>
+          <tr><th>Band</th><th>AQI Range</th><th>Example Share</th></tr>
+          <tr><td>🟢 Low</td><td>&lt; 100</td><td>60%</td></tr>
+          <tr><td>🟡 Moderate</td><td>100–150</td><td>30%</td></tr>
+          <tr><td>🔴 High</td><td>&gt; 150</td><td>10%</td></tr>
+        </table>
+        <div class="note" style="margin-top:10px;">"Exposure" = <strong>ambient AQI from location</strong>, not filtered. Contextualises why protection matters. Source: AQ API × device GPS/time.</div>
+      </div>
+    </div>
+
+    <!-- S2 W3 -->
+    <div class="widget-card page-section" id="s2-w3">
+      <div class="widget-header">
+        <div class="widget-num">W3</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Daily Protection Bar Chart</div>
+          <div class="widget-subtitle">Mon–Sun, current week</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <pre>protected_hours[day] = <span class="fn">SUM</span>(BLE session durations, mode != <span class="str">"off"</span>) / <span class="num">3600</span>
+bar_height = (day_hours / max_hours) × chart_max_px</pre>
+        <table style="margin-top:10px;">
+          <tr><th>Bar type</th><th>Style</th></tr>
+          <tr><td>Today</td><td>Solid blue</td></tr>
+          <tr><td>Future days</td><td>Empty / ghost bar</td></tr>
+          <tr><td>Past days</td><td>Filled light blue</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- S2 W4 -->
+    <div class="widget-card page-section" id="s2-w4">
+      <div class="widget-header">
+        <div class="widget-num">W4</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Total Protected + Avoided</div>
+          <div class="widget-subtitle">18h this week · 312 exposure events</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="sub-label">total_protected_hours_week</div>
+        <pre>= <span class="fn">SUM</span>(all BLE sessions <span class="kw">where</span> mode != <span class="str">"off"</span>, this week) / <span class="num">3600</span>
+→ round to nearest <span class="num">0.5h</span></pre>
+        <div class="sub-label">avoided_exposure_events</div>
+        <pre>= <span class="fn">COUNT</span> of distinct high-AQI windows (AQI &gt; <span class="num">150</span>, each &gt; 5 min)
+  <span class="kw">where</span> device was ON during that window
+→ each overlap = <span class="num">1</span> "avoided exposure event"
+<span class="cm">// AQ API polled every 15 min, cross-referenced with device ON status</span></pre>
+      </div>
+    </div>
+
+    <!-- S2 W5 -->
+    <div class="widget-card page-section" id="s2-w5">
+      <div class="widget-header">
+        <div class="widget-num">W5</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Turbo Usage % + Best Day</div>
+          <div class="widget-subtitle">34% of total time · Sat · 6h 10m protected</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <pre>turbo_usage_pct = <span class="fn">SUM</span>(mode == <span class="str">"turbo"</span>, this week)
+                / <span class="fn">SUM</span>(all ON sessions this week)
+                × <span class="num">100</span>
+
+best_day        = <span class="kw">day with</span> <span class="fn">MAX</span>(protected_hours[day]) this week
+                → show day name + protected hours as <span class="str">"Xh Ym"</span></pre>
+      </div>
+    </div>
+
+    <!-- S2 W6 -->
+    <div class="widget-card page-section" id="s2-w6">
+      <div class="widget-header">
+        <div class="widget-num">W6</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Usage by Mode Donut Chart</div>
+          <div class="widget-subtitle">Normal 64% · Turbo 24% · Smart 12%</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <pre>total_on_seconds = <span class="fn">SUM</span>(BLE sessions <span class="kw">where</span> mode != <span class="str">"off"</span>, this week)
+
+normal_pct = <span class="fn">SUM</span>(mode == <span class="str">"normal"</span>) / total_on_seconds × <span class="num">100</span>
+turbo_pct  = <span class="fn">SUM</span>(mode == <span class="str">"turbo"</span>)  / total_on_seconds × <span class="num">100</span>
+smart_pct  = <span class="fn">SUM</span>(mode == <span class="str">"smart"</span> <span class="cm">// app-auto-switched</span>) / total_on_seconds × <span class="num">100</span></pre>
+        <div class="note"><strong>Smart Mode attribution:</strong> Seconds where Smart Mode triggered the switch go to the "Smart" bucket, not Normal or Turbo.</div>
+        <p style="margin-top:8px;">Donut arc proportional to each %. "This Week" label in centre.</p>
+      </div>
+    </div>
+
+    <!-- S2 W7 -->
+    <div class="widget-card page-section" id="s2-w7">
+      <div class="widget-header">
+        <div class="widget-num">W7</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Insights</div>
+          <div class="widget-subtitle">3 rule-based / AI-generated bullets</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="insight-list">
+          <div class="insight-item">
+            <div class="insight-icon" style="background:var(--tag-blue);">🔵</div>
+            <div class="insight-content">
+              <div class="insight-title">Insight 1 — Turbo Time Pattern</div>
+              <div class="insight-desc">Group all turbo sessions by hour of day. Find peak window (e.g. 8–10AM has most turbo seconds).<br/>→ <em>"Turbo used mostly during [peak_window]"</em></div>
+            </div>
+          </div>
+          <div class="insight-item">
+            <div class="insight-icon" style="background:var(--tag-purple);">🟣</div>
+            <div class="insight-content">
+              <div class="insight-title">Insight 2 — Air Quality Pattern</div>
+              <div class="insight-desc">Analyse AQ API history (past 2 weeks). Find recurring high-AQI windows by day/time. If high AQI on &gt;3 weekday mornings:<br/>→ <em>"Air quality worsens every weekday morning near you"</em></div>
+            </div>
+          </div>
+          <div class="insight-item">
+            <div class="insight-icon" style="background:var(--tag-yellow);">🟡</div>
+            <div class="insight-content">
+              <div class="insight-title">Insight 3 — Battery Savings Tip</div>
+              <div class="insight-desc">
+                <pre style="margin:6px 0;font-size:11px;">estimated_smart_hours = turbo_hours
+battery_saved = (turbo_drain_rate - smart_avg_drain_rate) × estimated_smart_hours
+savings_pct   = battery_saved / total_battery_used × 100</pre>
+                → <em>"Smart Mode could save ~{savings_pct}% battery this week"</em>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S2 W8 -->
+    <div class="widget-card page-section" id="s2-w8">
+      <div class="widget-header">
+        <div class="widget-num">W8</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">Achievements</div>
+          <div class="widget-subtitle">Medals shown in dull colour until earned</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="achievement-grid">
+          <div class="achievement-card">
+            <div class="achievement-icon">🏅</div>
+            <div>
+              <div class="achievement-name">Consistent Commuter</div>
+              <div class="achievement-trigger">≥1 BLE session per day for <strong>5+ consecutive days</strong><br/><br/><code>streak_days = COUNT(consecutive days where SUM(session_duration) > 0)<br/>if streak_days >= 5 → award</code></div>
+            </div>
+          </div>
+          <div class="achievement-card">
+            <div class="achievement-icon">⭐</div>
+            <div>
+              <div class="achievement-name">High Pollution Survivor</div>
+              <div class="achievement-trigger">Device ON for <strong>&gt;50% of a day where AQI &gt; 200</strong><br/><br/><code>protection_pct = protected_hours / awake_hours × 100<br/>if peak_AQI >= 200 AND protection_pct >= 50 → award</code></div>
+            </div>
+          </div>
+        </div>
+        <div class="note" style="margin-top:10px;">Unearned medals display in <strong>dull colour</strong> to show what users can achieve. More badges planned for future phases.</div>
+      </div>
+    </div>
+
+    <!-- S2 W9 -->
+    <div class="widget-card page-section" id="s2-w9">
+      <div class="widget-header">
+        <div class="widget-num">W9</div>
+        <div class="widget-title-wrap">
+          <div class="widget-title">"Weekly Report Ready" Banner</div>
+          <div class="widget-subtitle">CTA: View →</div>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="sub-label">Trigger condition</div>
+        <pre>(Sunday after 6PM OR Monday before noon)
+AND at least 3 days of BLE usage data this week</pre>
+        <div class="sub-label">Report content (server-side)</div>
+        <ul style="margin-top:6px;">
+          <li>weekly_score + delta vs last week</li>
+          <li>Top 3 insights from the week</li>
+          <li>Total protected hours + avoided events</li>
+          <li>Mode breakdown summary</li>
+          <li>Streak status</li>
+        </ul>
+        <div class="warn-note" style="margin-top:12px;"><strong>Launch note:</strong> Not required now — will ship in the last phase.</div>
+      </div>
+    </div>
+
+
+    <!-- ════════════════════════════════════════════
+         DATA LAYER
+    ═══════════════════════════════════════════════ -->
+    <div class="section-divider">
+      <div class="div-line"></div>
+      <div class="div-label">Data Layer</div>
+      <div class="div-line"></div>
+    </div>
+
+    <section class="page-section" id="ble-model">
+      <h3>BLE Raw Data Model</h3>
+      <div class="ble-model">
+<span style="color:var(--accent);font-weight:600;">BLE_EVENT</span> {
+  timestamp:        <span style="color:var(--accent2);">DateTime</span>,
+  mode:             <span style="color:var(--accent4);">"normal" | "turbo" | "off"</span>,
+  duration_seconds: <span style="color:var(--accent2);">Int</span>  <span style="color:var(--text3);">// how long current mode has been running</span>
+}
+
+<span style="color:var(--text3);">// Every time mode changes, a new event arrives.
+// Sessions are tracked server-side.</span>
+      </div>
+    </section>
+
+    <section class="page-section" id="db-schema">
+      <h3>Backend Database Schema</h3>
+      <div class="schema-block">
+<span class="s-table">sessions_table:</span>
+  <span class="s-field">user_id, device_id, start_time, end_time, mode, duration_seconds</span>
+
+<span class="s-table">daily_aggregates:</span>
+  <span class="s-field">user_id, date, total_on_seconds, turbo_seconds, normal_seconds,</span>
+  <span class="s-field">smart_seconds, protection_pct, aqi_avg, avoided_events</span>
+
+<span class="s-table">weekly_aggregates:</span>
+  <span class="s-field">user_id, week_start, weekly_score, streak_days, turbo_pct,</span>
+  <span class="s-field">best_day, total_protected_hours, total_avoided_events</span>
+
+<span class="s-table">insights:</span>
+  <span class="s-field">user_id, generated_at, insight_type, message, priority</span>
+
+<span class="s-table">achievements:</span>
+  <span class="s-field">user_id, achievement_id, unlocked_at</span>
+      </div>
+    </section>
+
+    <section class="page-section" id="team-actions">
+      <h3>Team Action Items</h3>
+      <div class="team-grid">
+        <div class="team-card team-must">
+          <div class="team-name">Firmware Team</div>
+          <div class="team-item">Implement + expose <code>battery_voltage_mv</code></div>
+          <div class="team-item">Implement + expose <code>charging_status</code></div>
+          <div class="team-item">Optionally: timestamp / validity flag</div>
+        </div>
+        <div class="team-card team-should">
+          <div class="team-name">App Team</div>
+          <div class="team-item">Sample filtering logic</div>
+          <div class="team-item">Charging + settling state machine</div>
+          <div class="team-item">0.5C lookup-table interpolation</div>
+          <div class="team-item">Remaining battery % calculation</div>
+          <div class="team-item">All widget display logic (Screens 1 &amp; 2)</div>
+          <div class="team-item">Smart Mode automation layer</div>
+          <div class="team-item">AQ API integration</div>
+        </div>
+        <div class="team-card team-opt">
+          <div class="team-name">Backend Team (Optional)</div>
+          <div class="team-item">Store voltage + charging telemetry</div>
+          <div class="team-item">Store estimated battery %</div>
+          <div class="team-item">Session aggregation + scoring</div>
+          <div class="team-item">Insights generation</div>
+          <div class="team-item">Analytics + threshold tuning</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="principle-box" style="margin-top:32px;">
+      <strong>🔑 Core Architecture Principle:</strong> The BLE device only tells you <em>when and how hard it ran</em>. All meaning — protection %, avoided events, scores, battery state, insights — is <strong>constructed by the app and server-side</strong>, by joining BLE session data with Air Quality API data and user behaviour patterns. <strong>The app is the intelligence layer</strong> on top of a simple on/off device.
+    </div>
+
+    <div style="height: 80px;"></div>
+  </div>
+</main>
+
+<script>
+// Scrollspy
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('.page-section');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const match = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+      if (match) match.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+sections.forEach(s => observer.observe(s));
+
+links.forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    const id = link.getAttribute('href').slice(1);
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+</script>
+</body>
+</html>
